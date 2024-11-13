@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "741821047119",
+    "project_id": "corto-e2ce3",
+    "storage_bucket": "corto-e2ce3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:741821047119:android:001ce3d8a27279a6f7a53a",
+        "android_client_info": {
+          "package_name": "com.example.corto_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "741821047119-bbcvegkdtdief4ap1mr37latffr4q3gd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.corto_flutter",
+            "certificate_hash": "9e6cb1aabf889953d38404cd9c6db79d96749b7c"
+          }
+        },
+        {
+          "client_id": "741821047119-4p1ivsnqraea67rgsulug1895fgqbpop.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkKKYo-3hWInIijKa2K936AxvzMUXyN-A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "741821047119-4p1ivsnqraea67rgsulug1895fgqbpop.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "561338680433",
+    "project_id": "mail-ceb33",
+    "storage_bucket": "mail-ceb33.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561338680433:android:57e70a03094cc5623f07d0",
+        "android_client_info": {
+          "package_name": "com.example.mail_logs"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6TFodsrnsb3MDx2u-xYmahWgKS5UfASs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
