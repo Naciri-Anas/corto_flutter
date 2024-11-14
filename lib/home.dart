@@ -22,8 +22,10 @@
     final String text;
     final bool isUser;
     final DateTime timestamp;
+    final String? link;
 
-    Message({required this.text, required this.isUser, required this.timestamp});
+
+    Message({required this.text, required this.isUser, required this.timestamp,this.link});
   }
 
 
@@ -259,8 +261,10 @@
                     "Current Price: ${deal['Price']}\n"
                     "Original Price: ${deal['Old Price']}\n",
 
+
                 isUser: false,
                 timestamp: DateTime.now(),
+                link: deal['Deal URL'],
               ));
             });
             _scrollToBottom();
@@ -472,21 +476,32 @@
             color: message.isUser ? Colors.blue[900] : Colors.grey[200],
             borderRadius: BorderRadius.circular(16),
           ),
-          child: GestureDetector(
-            onTap: () async {
-              // Adjusted regex pattern to capture URL better
-
-            },
-            child: Text(
-              message.text,
-              style: TextStyle(
-                color: message.isUser ? Colors.white : Colors.black87,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                message.text,
+                style: TextStyle(
+                  color: message.isUser ? Colors.white : Colors.black87,
+                ),
               ),
-            ),
+              if (message.link != null) ...[
+                SizedBox(height: 8),
+                InkWell(
+                  onTap: () => _launchURL(message.link!),
+                  child: Text(
+                    "Visit Deal",
+                    style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       );
     }
+
+
     void _saveChatHistory() async {
       final prefs = await SharedPreferences.getInstance();
       List<String> history = _messages.map((message) {
@@ -494,6 +509,7 @@
           'text': message.text,
           'isUser': message.isUser,
           'timestamp': message.timestamp.toIso8601String(),
+          'link': message.link,
         });
       }).toList();
       await prefs.setStringList('chatHistory', history);
@@ -512,11 +528,26 @@
             text: messageData['text'],
             isUser: messageData['isUser'],
             timestamp: DateTime.parse(messageData['timestamp']),
+            link: messageData['link'],
           );
         }).toList());
       });
     }
 
+    Future<void> _launchURL(String urlString) async {
+      final Uri url = Uri.parse(urlString);
+      try {
+        if (!await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication,
+        )) {
+          throw Exception('Could not launch $urlString');
+        }
+      } catch (e) {
+        print('Error launching URL: $e');
+        // Optionally show a snackbar or alert dialog here
+      }
+    }
 
 
   }
