@@ -12,6 +12,9 @@
   import 'available_coupons.dart';
   import 'package:shared_preferences/shared_preferences.dart';
   import 'package:flutter_tts/flutter_tts.dart';
+  import 'package:intl/intl.dart';
+  import 'package:porcupine_flutter/porcupine_manager.dart';
+  import 'package:porcupine_flutter/porcupine_error.dart';
 
 
 
@@ -32,6 +35,7 @@
 
   class HomePage extends StatefulWidget {
 
+
     @override
 
     _HomePageState createState() => _HomePageState();
@@ -42,6 +46,8 @@
 
 
     FlutterTts _flutterTts = FlutterTts();
+
+    late PorcupineManager _porcupineManager;
 
 
     final TextEditingController _messageController = TextEditingController();
@@ -62,6 +68,7 @@
       _addInitialMessage();
       _loadChatHistory();
       _speech = stt.SpeechToText();
+      _initPorcupine();
     }
     void _speak(String text) async {
       await _flutterTts.setLanguage("en-US");
@@ -76,6 +83,8 @@
           text: "Hello! I'm Corto. You can:\n\n"
               "1. Search for coupons and deals\n"
               "2. Use voice commands\n\n"
+              "3. Use voice commands by saying 'Hey Corto'\n\n"
+              "4. Use voice commands\n\n"
               "How can I help you today?",
           isUser: false,
           timestamp: DateTime.now(),
@@ -88,8 +97,30 @@
       _messageController.dispose();
       _scrollController.dispose();
       _speech.stop();
+      _porcupineManager.delete();
       _flutterTts.stop();
       super.dispose();
+    }
+
+    Future<void> _initPorcupine() async {
+      try {
+        _porcupineManager = await PorcupineManager.fromKeywordPaths(
+          "AAbpp+ZI4tHxDwVFpgSdiI2ZylNb3ky2b6rsrlmqOId5ocjRqyT+gQ==",
+          ["assets/hey_corta.ppn"],
+          _wakeWordCallback,
+          errorCallback: _errorCallback,
+        );
+        await _porcupineManager.start();
+      } on PorcupineException catch (err) {
+        print("Failed to initialize Porcupine: $err");
+      }
+    }
+    void _wakeWordCallback(int keywordIndex) {
+      print("Wake word detected!");
+      _listen(context);
+    }
+    void _errorCallback(PorcupineException error) {
+      print("Porcupine error: ${error.message}");
     }
 
     Future<void> _requestMicrophonePermission() async {
