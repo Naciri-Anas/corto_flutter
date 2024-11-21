@@ -61,9 +61,10 @@
     @override
     void initState() {
       super.initState();
+      _requestMicrophonePermission();
       _flutterTts = FlutterTts();
       _speech = stt.SpeechToText();
-      _requestMicrophonePermission();
+
       _sendEmailLogs();
       _addInitialMessage();
       _loadChatHistory();
@@ -94,9 +95,11 @@
 
     @override
     void dispose() {
+
+      _speech.stop();
       _messageController.dispose();
       _scrollController.dispose();
-      _speech.stop();
+
       _porcupineManager.delete();
       _flutterTts.stop();
       super.dispose();
@@ -105,8 +108,8 @@
     Future<void> _initPorcupine() async {
       try {
         _porcupineManager = await PorcupineManager.fromKeywordPaths(
-          "AAbpp+ZI4tHxDwVFpgSdiI2ZylNb3ky2b6rsrlmqOId5ocjRqyT+gQ==",
-          ["assets/hey_corta.ppn"],
+          "SH3LU6hylHpS4AKcaRAS7vDqVGHHXROhBsQMjhc1jz78qMb0oYuM8w==",
+          ["assets/hello-curto_en_android_v3_0_0.ppn"],
           _wakeWordCallback,
           errorCallback: _errorCallback,
         );
@@ -127,6 +130,9 @@
       PermissionStatus status = await Permission.microphone.request();
       if (status != PermissionStatus.granted) {
         print('Microphone permission denied');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Microphone permission is required.')),
+        );
       }
     }
 
@@ -178,66 +184,90 @@
           onStatus: (val) {
             print('onStatus: $val');
             if (val == 'done') {
-              _stopListening();
+              Future.delayed(Duration(milliseconds: 500), () {
+                if (mounted && _isListening) {
+                  _stopListening();
+                }
+              });
             }
           },
           onError: (val) {
             print('onError: $val');
-            _stopListening();
+            if (mounted) {
+              _stopListening();
+            }
           },
         );
 
+        print("Speech Initialization Available: $available");
+
         if (available) {
-          setState(() {
-            _isListening = true;
-            _recognizedText = "Listening...";
-          });
+          if (mounted) {
+            setState(() {
+              _isListening = true;
+              _recognizedText = "Listening...";
+            });
+          }
 
-          _speech.listen(
-            onResult: (val) async {
-              setState(() {
-                _recognizedText = val.recognizedWords;
-              });
-
-              if (val.finalResult) {
-                setState(() {
-                  _messages.add(Message(
-                    text: val.recognizedWords,
-                    isUser: true,
-                    timestamp: DateTime.now(),
-                  ));
-                });
-                _scrollToBottom();
-
-                String response = await _processUserMessage(val.recognizedWords);
-                setState(() {
-                  _messages.add(Message(
-                    text: response,
-                    isUser: false,
-                    timestamp: DateTime.now(),
-                  ));
-                });
-                _scrollToBottom();
-
-                String voiceInput = val.recognizedWords.toLowerCase();
-                if (voiceInput.contains('coupon') ||
-                    voiceInput.contains('deal')) {
-                  await _sendEmailLogs();
+          try {
+            print("Starting speech listening...");
+            _speech.listen(
+              onResult: (val) async {
+                print("onResult: ${val.recognizedWords}");
+                if (mounted) {
+                  setState(() {
+                    _recognizedText = val.recognizedWords;
+                  });
                 }
 
-                for (String keyword in _getKeywords()) {
-                  if (voiceInput.contains(keyword.toLowerCase())) {
-                    _handleKeywordMatch(keyword);
-                    break;
+                if (val.finalResult) {
+                  if (mounted) {
+                    _stopListening();
+                  }
+
+                  setState(() {
+                    _messages.add(Message(
+                      text: val.recognizedWords,
+                      isUser: true,
+                      timestamp: DateTime.now(),
+                    ));
+                  });
+                  _scrollToBottom();
+
+                  String response = await _processUserMessage(val.recognizedWords);
+                  if (mounted) {
+                    setState(() {
+                      _messages.add(Message(
+                        text: response,
+                        isUser: false,
+                        timestamp: DateTime.now(),
+                      ));
+                    });
+                  }
+                  _scrollToBottom();
+
+                  String voiceInput = val.recognizedWords.toLowerCase();
+                  if (voiceInput.contains('coupon') || voiceInput.contains('deal')) {
+                    await _sendEmailLogs();
+                  }
+
+                  for (String keyword in _getKeywords()) {
+                    if (voiceInput.contains(keyword.toLowerCase())) {
+                      _handleKeywordMatch(keyword);
+                      break;
+                    }
                   }
                 }
-              }
-            },
-            listenFor: Duration(seconds: 30),
-            pauseFor: Duration(seconds: 3),
-            partialResults: true,
-            listenMode: stt.ListenMode.confirmation,
-          );
+              },
+              listenFor: Duration(seconds: 20),
+              pauseFor: Duration(seconds: 10),
+              partialResults: true,
+              localeId: "en_US",
+              listenMode: stt.ListenMode.confirmation,
+            );
+          } catch (e) {
+            print("Error starting speech recognition: $e");
+          }
         } else {
           print("Speech recognition unavailable");
           ScaffoldMessenger.of(context).showSnackBar(
@@ -249,6 +279,8 @@
         }
       }
     }
+
+
 
     List<String> _getKeywords() {
       return [
